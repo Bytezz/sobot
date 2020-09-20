@@ -40,7 +40,7 @@ The brain it's only a python's dictionary in a text file which get loaded inside
 ```python
 {
 "say hello":"Hello, World!",
-'hi':':goto:say hello:goto'
+'hi':':goto:say hello:goto:'
 }
 ```
 This is a simple example of how a brain it's written. All it's between "{" and "}", each command
@@ -52,7 +52,7 @@ Outside the " and the ', the code can have spaces, tabs and new lines.
 Brain have its own commands to work:
 
 - `|&|`
-- `:goto:
+- `:goto:`
 - `exec%=%`
 
 "|&|" it's used to put more answer to one command, will be returned only one randomly selected.  
