@@ -1,16 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os,sys,random,thread
-version="0.1.2"
-def face(expr="normal",speak=False):
+import os,sys,random,time
+try:
+	import thread
+except:
+	import _thread as thread
+
+version="0.1.5"
+
+def face(expr=["normal"],speak=False):
 	def clear():
 		os.system('cls' if os.name=='nt' else 'clear')
-	def height():
+	def h():
 		if os.name!="nt":
 			return int(os.popen('stty size','r').read().split()[0])
 		else:
 			return 25
-	def width():
+	def w():
 		if os.name!="nt":
 			return int(os.popen('stty size','r').read().split()[1])
 		else:
@@ -34,8 +40,9 @@ def face(expr="normal",speak=False):
 	def printxy(x,y,text):
 		sys.stdout.write("\x1b7\x1b[%d;%df%s\x1b8"%(y,x,text))
 		sys.stdout.flush()
-	global width;width=width()
-	global height;height=height()
+	
+	global width;width=w()
+	global height;height=h()
 	####
 	runners=[]
 	#
@@ -43,12 +50,18 @@ def face(expr="normal",speak=False):
 	eyespos=None
 	mouthpos=None
 	####
-	def eyebrows():
+	def eyebrows(closedeyes=False):
 		runners.append(1)
 		#
 		brow="#"*lenwidth(25)
 		# brow length, first[x,y], second[x,y]
-		pos=[len(brow),[lenwidth(12),lenheight(13)],[width-lenwidth(12)-len(brow),lenheight(13)]]
+		if closedeyes:
+			y=lenheight(13)+lenheight(20)
+		else:
+			y=lenheight(13)
+			if "eyes-semi-closed" in expr:
+				y+=int(lenheight(13)/2)
+		pos=[len(brow),[lenwidth(12),y],[width-lenwidth(12)-len(brow),y]]
 		printxy(pos[1][0],pos[1][1],brow)
 		printxy(pos[2][0],pos[2][1],brow)
 		#
@@ -57,6 +70,14 @@ def face(expr="normal",speak=False):
 	def eyes():
 		runners.append(1)
 		#
+		if "eyes-semi-closed" in expr and not closedeyes:
+			lbry=eyebrowspos[1][1]+lenheight(20)/2
+			rbry=eyebrowspos[2][1]+lenheight(20)/2
+			rows=lenheight(20)-int(lenheight(13)/2)
+		else:
+			lbry=eyebrowspos[1][1]+lenheight(20)
+			rbry=eyebrowspos[2][1]+lenheight(20)
+			rows=lenheight(20)
 		# left[top left corner[x,y], bottom right corner[x,y]], right[top left corner[x,y], bottom right corner[x,y]],
 		pos=[
 			[ # left
@@ -65,8 +86,8 @@ def face(expr="normal",speak=False):
 					eyebrowspos[1][1]+1 # top left y
 				],
 				[ # bottom right
-					eyebrowspos[1][0]+eyebrowspos[0]-percentage(75,eyebrowspos[0])+len("#"+("#"*(percentage(75,eyebrowspos[0])-2))+"#"), # bottom right x
-					eyebrowspos[1][1]+lenheight(20) # bottom right y
+					eyebrowspos[1][0]+eyebrowspos[0]-percentage(75,eyebrowspos[0])+len("#"+("#"*int(percentage(75,eyebrowspos[0])-2))+"#"), # bottom right x
+					lbry # bottom right y
 				]
 			],
 			[ # right
@@ -75,16 +96,16 @@ def face(expr="normal",speak=False):
 					eyebrowspos[2][1]+1 # tly
 				],
 				[ # br
-					eyebrowspos[2][0]+len("#"+("#"*(percentage(75,eyebrowspos[0])-2))+"#"), # brx
-					eyebrowspos[2][1]+lenheight(20) # bry
+					eyebrowspos[2][0]+len("#"+("#"*int(percentage(75,eyebrowspos[0])-2))+"#"), # brx
+					rbry # bry
 				]
 			]
 		]
-		for i in range(1,lenheight(20)):
-			printxy(eyebrowspos[1][0]+eyebrowspos[0]-percentage(75,eyebrowspos[0]),eyebrowspos[1][1]+i,"#"+(" "*(percentage(75,eyebrowspos[0])-2))+"#")
-			printxy(eyebrowspos[2][0],eyebrowspos[2][1]+i,"#"+(" "*(percentage(75,eyebrowspos[0])-2))+"#")
-		printxy(eyebrowspos[1][0]+eyebrowspos[0]-percentage(75,eyebrowspos[0]),eyebrowspos[1][1]+i+1,"#"+("#"*(percentage(75,eyebrowspos[0])-2))+"#")
-		printxy(eyebrowspos[2][0],eyebrowspos[2][1]+i+1,"#"+("#"*(percentage(75,eyebrowspos[0])-2))+"#")
+		for i in range(1,rows):
+			printxy(eyebrowspos[1][0]+eyebrowspos[0]-percentage(75,eyebrowspos[0]),eyebrowspos[1][1]+i,"#"+(" "*int(percentage(75,eyebrowspos[0])-2))+"#")
+			printxy(eyebrowspos[2][0],eyebrowspos[2][1]+i,"#"+(" "*int(percentage(75,eyebrowspos[0])-2))+"#")
+		printxy(eyebrowspos[1][0]+eyebrowspos[0]-percentage(75,eyebrowspos[0]),eyebrowspos[1][1]+i+1,"#"+("#"*int(percentage(75,eyebrowspos[0])-2))+"#")
+		printxy(eyebrowspos[2][0],eyebrowspos[2][1]+i+1,"#"+("#"*int(percentage(75,eyebrowspos[0])-2))+"#")
 		#
 		runners.pop(0)
 		return pos
@@ -126,9 +147,15 @@ def face(expr="normal",speak=False):
 	thread.start_new_thread(nose,())
 	thread.start_new_thread(mouth,())
 	#
-	eyebrowspos=eyebrows()
-	eyespos=eyes()
-	eyesdot()
+	t=time.time()
+	if int(t)%10==0 and int(str(t).split(".")[-1][0])<5:
+		closedeyes=True
+	else:
+		closedeyes=False
+	eyebrowspos=eyebrows(closedeyes)
+	if not closedeyes:
+		eyespos=eyes()
+		eyesdot()
 	#nose()
 	#mouthpos=mouth()
 	while runners!=[]:
