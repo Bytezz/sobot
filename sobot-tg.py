@@ -1,9 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os,sys,urllib,re,time,datetime,ast,random,thread
+import os,sys,re,time,datetime,ast,random
+try:
+	import urllib.request as urllib
+except:
+	import urllib
+try:
+	import thread
+except:
+	import _thread as thread
 from rmem import *
 from difflib import SequenceMatcher
-version="1.0"
+
+version="1.1"
+
 def similar(a,b):
 	return SequenceMatcher(None,a,b).ratio()
 def epoch():
@@ -23,13 +33,13 @@ def snd(chat_id,text):
 	try:
 		result=readurl("https://api.telegram.org/bot"+token+"/sendMessage?chat_id="+chat_id+"&text="+str(text))
 		if '"error_code":403' in errorcont:
-			print "User blocked the bot."
+			print("User blocked the bot.")
 			rmuser(chat_id)
 	except Exception as e:
 		log(e)
 def log(t):
 	t=str(datetime.datetime.now())+" - "+str(t)
-	print t
+	print(t)
 	if not os.path.isfile("tg-log.log"):
 		log=open("tg-log.log","w+")
 		log.close()
@@ -157,10 +167,10 @@ def elaborate(d):
 	#		user=str(d["inline_query"]["from"]["id"])
 	#	iid=d["inline_query"]["id"]
 	#	c=d["inline_query"]["query"]
-	#	print "inline_query: "+c
+	#	print("inline_query: "+c)
 	#	laq="https://api.telegram.org/bot"+token+"/answerInlineQuery?id="+iid+"&results=type=article,title=Test,message_text=Test."
-	#	print laq
-	#	print readurl(laq)
+	#	print(laq)
+	#	print(readurl(laq))
 try:
 	anstollerance
 except NameError:

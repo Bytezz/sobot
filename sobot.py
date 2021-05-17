@@ -1,19 +1,51 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import sys,re,ast,random,thread,time,datetime,pyttsx3,terminal_virtualface as virtualface
+import sys,re,ast,random,time,datetime,pyttsx3
+
+try:
+	import thread
+except:
+	import _thread as thread
+
+try:
+	import terminal_virtualface as virtualface
+	virtualface_enabled=True
+except:
+	virtualface_enabled=False
+
 from pocketsphinx import LiveSpeech
 #import speech_recognition as sr
 from rmem import *
 from difflib import SequenceMatcher
-version="1.0"
+
+version="1.1"
+
 def log(txt):
 	txt=str(datetime.datetime.now())+" - "+str(txt)
-	print txt
+	print(txt)
 	with open("log.log","a") as log:
 		log.write(txt+"\n")
 		log.close()
 def similar(a,b):
+	try:
+		a=encode(a)
+	except:
+		pass
+	try:
+		b=encode(b)
+	except:
+		pass
 	return SequenceMatcher(None,a,b).ratio()
+def encode(o):
+	try:
+		o=str(o)
+	except:
+		pass
+	try:
+		o=unicode(o,"utf-8")
+	except:
+		pass
+	return o
 def voice(txt):
 	global voicetts;global voicebusy
 	voicetts.say(txt)
@@ -31,25 +63,26 @@ def face():
 			virtualface.face(speak=True)
 		else:
 			virtualface.face()
-		print oldc
+		print(oldc)
 		time.sleep(.1)
 def resultcode(cm,args=[]):
 	global brain
 	if "|&|" in cm:
 		cm=cm.split("|&|")[(random.randrange(0,len(cm.split("|&|"))))]
 	if cm.startswith(":goto:") and cm.endswith(":goto:"):
-		if brain.has_key(cm[6:-6]):
+		if cm[6:-6] in brain:
 			cm=resultcode(brain[cm[6:-6]],args)
 	if cm.startswith("exec%=%") and cm.endswith("%=%exec"):
 		exec("cm="+"".join(re.findall('exec%=%(.*?)%=%exec',cm)))
 	return cm
 def output(o):
 	newinput=False
+	o=encode(o)
 	if o.startswith("<<newinput<") and o.endswith(">newinput>>"):
 		newinput=True
 		o,f=o[11:-11].split("<,>")
 	if executiontype=="lite":
-		print o
+		print(o)
 	else:
 		voice(o) #thread.start_new_thread(voice,(o,)
 	if newinput:
@@ -73,7 +106,8 @@ def sinput():
 	#		log(e)
 	#		o=""
 	###
-	return str(o)
+	return encode(o)
+
 global executiontype
 if len(sys.argv)>1:
 	executiontype=sys.argv[1]
@@ -99,14 +133,14 @@ except Exception as e:
 	brain={}
 ###
 # load face
-if executiontype!="lite" and executiontype!="silent":
+if virtualface_enabled and executiontype!="lite" and executiontype!="silent":
 	thread.start_new_thread(face,())
 ###
 global cm
 global c
 c=""
-if executiontype=="lite":print "'"+exitcommand+"' to exit\n---------------"
-if brain.has_key("SWM"):
+if executiontype=="lite":print("'"+exitcommand+"' to exit\n---------------")
+if "SWM" in brain:
 	cm=resultcode(brain["SWM"])
 	output(cm)
 while c!=exitcommand:
@@ -115,7 +149,7 @@ while c!=exitcommand:
 	if c!=exitcommand:
 		rawc=c
 		c=c.lower()
-		if brain.has_key(c):
+		if c in brain:
 			cm=resultcode(brain[c])
 			output(cm)
 		else:
@@ -134,18 +168,18 @@ while c!=exitcommand:
 							args=rawcwords[len(rawcwords)-n:]
 			if atto!=0:
 				c=attn
-				#print ">",c
-				#print "< Args:",args
+				#print(">",c)
+				#print("< Args:",args)
 				cm=resultcode(brain[c],args)
 				output(cm)
-			elif brain.has_key("CNFE"):
+			elif "CNFE" in brain:
 				cm=resultcode(brain["CNFE"])
 				output(cm)
 			else:
 				output("Command not found.")
 	else:
-		if brain.has_key("CBM"):
+		if "CBM" in brain:
 			cm=resultcode(brain["CBM"])
 			output(cm)
 		else:
-			print "Exit..."
+			print("Exit...")
